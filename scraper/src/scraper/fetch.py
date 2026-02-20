@@ -7,24 +7,12 @@ HEADERS = {
     "Authorization": "Basic ZWwyNXgwMDcgOktyb21waXJjZWsuMTI=",
 }
 
-payload = {
-    "end_date": "2026-02-22",
-    "start_date": "2026-02-16",
-}
 
-
-def fetch_page(page: int):
+def fetch_page(start_date: str, end_date: str) -> dict:
+    payload = {
+        "start_date": start_date,
+        "end_date": end_date,
+    }
     resp = requests.post(URL, json=payload, headers=HEADERS, timeout=10)
-    print(resp.status_code, resp.text)
     resp.raise_for_status()
     return resp.json()
-
-
-def main():
-    data = fetch_page(1)
-
-    print(data)
-
-
-if __name__ == "__main__":
-    main()
