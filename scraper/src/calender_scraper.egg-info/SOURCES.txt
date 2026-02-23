@@ -1,0 +1,11 @@
+pyproject.toml
+src/calender_scraper.egg-info/PKG-INFO
+src/calender_scraper.egg-info/SOURCES.txt
+src/calender_scraper.egg-info/dependency_links.txt
+src/calender_scraper.egg-info/entry_points.txt
+src/calender_scraper.egg-info/requires.txt
+src/calender_scraper.egg-info/top_level.txt
+src/scraper/__init__.py
+src/scraper/cli.py
+src/scraper/fetch.py
+src/scraper/parse.py
