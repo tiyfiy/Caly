@@ -2,6 +2,7 @@ package ui
 
 import (
 	"github.com/charmbracelet/bubbles/list"
+	"github.com/charmbracelet/bubbles/table"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 )
@@ -26,7 +27,7 @@ type class struct {
 }
 
 type model struct {
-	//classes    []class
+	table      table.Model
 	cursor     int
 	statusLine string
 	width      int
@@ -35,8 +36,9 @@ type model struct {
 
 func initialModel() model {
 	return model{
+		table:      newTable(),
 		cursor:     0,
-		statusLine: "press q to quit",
+		statusLine: "↑/↓ navigate • enter select • q quit",
 	}
 }
 
@@ -45,6 +47,7 @@ func (m model) Init() tea.Cmd {
 }
 
 func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+	var cmd tea.Cmd
 	switch msg := msg.(type) {
 	case tea.WindowSizeMsg:
 		m.width = msg.Width
@@ -55,13 +58,14 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			return m, tea.Quit
 		}
 	}
-	return m, nil
+	m.table, cmd = m.table.Update(msg)
+	return m, cmd
 }
 
 func (m model) View() string {
 	header := headerStyle.Render("caly")
 
-	content := contentStyle.Render("no events yet.")
+	content := contentStyle.Render(m.table.View())
 
 	statusBar := statusBarStyle.Render(m.statusLine)
 
