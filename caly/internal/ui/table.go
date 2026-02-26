@@ -1,19 +1,16 @@
 package ui
 
 import (
+	"fmt"
+
 	"github.com/charmbracelet/bubbles/table"
 	"github.com/charmbracelet/lipgloss"
+	"github.com/tiyfiy/caly/internal/data"
 )
 
-var timeSlots = []string{
-	"08:00", "09:00", "10:00", "11:00", "12:00",
-	"13:00", "14:00", "15:00", "16:00", "17:00",
-	"18:00", "19:00", "20:00",
-}
-
-func newTable() table.Model {
+func newTable(hours []data.Hour, height int) table.Model {
 	columns := []table.Column{
-		{Title: "Time", Width: 6},
+		{Title: "Time", Width: 11},
 		{Title: "Mon", Width: 12},
 		{Title: "Tue", Width: 12},
 		{Title: "Wed", Width: 12},
@@ -23,16 +20,23 @@ func newTable() table.Model {
 		{Title: "Sun", Width: 12},
 	}
 
-	rows := make([]table.Row, len(timeSlots))
-	for i, slot := range timeSlots {
-		rows[i] = table.Row{slot, "", "", "", "", "", "", ""}
+	rows := make([]table.Row, len(hours))
+	for i, h := range hours {
+		start := h.Start[:5]
+		end := h.End[:5]
+		label := fmt.Sprintf("%s-%s", start, end)
+		rows[i] = table.Row{label, "", "", "", "", "", "", ""}
 	}
 
+	tableHeight := height - 6
+	if tableHeight < 1 {
+		tableHeight = 1
+	}
 	t := table.New(
 		table.WithColumns(columns),
 		table.WithRows(rows),
 		table.WithFocused(true),
-		table.WithHeight(len(timeSlots)),
+		table.WithHeight(tableHeight),
 	)
 
 	s := table.DefaultStyles()

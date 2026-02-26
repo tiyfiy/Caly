@@ -1,3 +1,4 @@
+import json
 from dataclasses import dataclass
 
 
@@ -10,6 +11,13 @@ class Lecture:
     start: str
     end: str
     room: str
+
+
+@dataclass
+class Hour:
+    slot: int
+    start: str
+    end: str
 
 
 def parse_lectures(data: list[dict]) -> list[Lecture]:
@@ -37,3 +45,16 @@ def parse_lectures(data: list[dict]) -> list[Lecture]:
             )
         )
     return sorted(lectures, key=lambda l: l.start)  # ISO strings sort correctly
+
+
+def parse_hours(data: list[dict]) -> list[Hour]:
+    hours = []
+    for hour in data:
+        hours.append(
+            Hour(
+                slot=hour["stunde"],
+                start=hour["beginn"],
+                end=hour["ende"],
+            )
+        )
+    return hours

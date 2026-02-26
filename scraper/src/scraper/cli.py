@@ -2,10 +2,10 @@ import argparse
 import json
 from datetime import date, timedelta
 
-from scraper.save import save_to_file
+from scraper.save import save_hours_to_file, save_lectures_to_file
 
 from .fetch import fetch_classes, fetch_hours
-from .parse import parse_lectures
+from .parse import parse_hours, parse_lectures
 
 
 def print_lectures(lectures):
@@ -60,11 +60,12 @@ def main():
         data = fetch_classes(args.start, args.end)
         lectures = parse_lectures(data["data"])
         print_lectures(lectures)
-        save_to_file(lectures)
+        save_lectures_to_file(lectures)
 
     if args.hours:
         data = fetch_hours()
-        print(data)
+        hours = parse_hours(data["data"])
+        save_hours_to_file(hours)
 
 
 if __name__ == "__main__":

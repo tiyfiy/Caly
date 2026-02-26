@@ -1,10 +1,10 @@
 package ui
 
 import (
-	"github.com/charmbracelet/bubbles/list"
 	"github.com/charmbracelet/bubbles/table"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
+	"github.com/tiyfiy/caly/internal/data"
 )
 
 var (
@@ -21,13 +21,9 @@ var (
 			Padding(1, 2)
 )
 
-type class struct {
-	ID   string
-	name string
-}
-
 type model struct {
 	table      table.Model
+	hours      []data.Hour
 	cursor     int
 	statusLine string
 	width      int
@@ -36,22 +32,32 @@ type model struct {
 
 func initialModel() model {
 	return model{
-		table:      newTable(),
+		table:      newTable(nil, 0),
 		cursor:     0,
-		statusLine: "↑/↓ navigate • enter select • q quit",
+		statusLine: "loading...",
 	}
 }
 
 func (m model) Init() tea.Cmd {
-	return nil
+	return data.FetchHours()
 }
 
 func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	var cmd tea.Cmd
 	switch msg := msg.(type) {
+	case data.HoursFetchedMsg:
+		m.hours = msg.Hours
+		m.table = newTable(m.hours, m.height)
+		m.statusLine = "↑/↓ navigate • enter select • q quit"
+
+	case data.HoursErrMsg:
+		m.statusLine = "error: " + msg.Err.Error()
+
 	case tea.WindowSizeMsg:
 		m.width = msg.Width
 		m.height = msg.Height
+		m.table = newTable(m.hours, m.height)
+
 	case tea.KeyMsg:
 		switch msg.String() {
 		case "ctrl+c", "q":
@@ -81,9 +87,3 @@ func Run() error {
 	_, err := p.Run()
 	return err
 }
-
-var _ list.Item = class{}
-
-func (c class) Title() string       { return c.name }
-func (c class) Description() string { return c.ID }
-func (c class) FilterValue() string { return c.name }
