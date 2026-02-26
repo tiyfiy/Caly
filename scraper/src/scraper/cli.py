@@ -4,7 +4,7 @@ from datetime import date, timedelta
 
 from scraper.save import save_to_file
 
-from .fetch import fetch_page
+from .fetch import fetch_classes, fetch_hours
 from .parse import parse_lectures
 
 
@@ -51,14 +51,20 @@ def main():
         metavar="YYYY-MM-DD",
         help=f"End date (default: {sunday.isoformat()})",
     )
+    parser.add_argument("--hours", action="store_true", help="parse hours")
+    parser.add_argument("-c", "--classes", action="store_true", help="parse classes")
 
     args = parser.parse_args()
+    if args.classes:
+        print(f"Fetching lectures from {args.start} to {args.end} ...")
+        data = fetch_classes(args.start, args.end)
+        lectures = parse_lectures(data["data"])
+        print_lectures(lectures)
+        save_to_file(lectures)
 
-    print(f"Fetching lectures from {args.start} to {args.end} ...")
-    data = fetch_page(args.start, args.end)
-    lectures = parse_lectures(data["data"])
-    print_lectures(lectures)
-    save_to_file(lectures)
+    if args.hours:
+        data = fetch_hours()
+        print(data)
 
 
 if __name__ == "__main__":
