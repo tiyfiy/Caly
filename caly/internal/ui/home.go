@@ -24,7 +24,7 @@ var (
 type model struct {
 	table      table.Model
 	hours      []data.Hour
-	cursor     int
+	lectures   []data.Lecture
 	statusLine string
 	width      int
 	height     int
@@ -32,14 +32,13 @@ type model struct {
 
 func initialModel() model {
 	return model{
-		table:      newTable(nil, 0),
-		cursor:     0,
+		table:      newTable(nil, nil, 0),
 		statusLine: "loading...",
 	}
 }
 
 func (m model) Init() tea.Cmd {
-	return data.FetchHours()
+	return tea.Batch(data.FetchHours(), data.FetchLectures())
 }
 
 func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
@@ -47,16 +46,24 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case data.HoursFetchedMsg:
 		m.hours = msg.Hours
-		m.table = newTable(m.hours, m.height)
+		m.table = newTable(m.hours, m.lectures, m.height)
 		m.statusLine = "↑/↓ navigate • enter select • q quit"
 
 	case data.HoursErrMsg:
-		m.statusLine = "error: " + msg.Err.Error()
+		m.statusLine = "hours error: " + msg.Err.Error()
+
+	case data.LecturesFetchedMsg:
+		m.lectures = msg.Lectures
+		m.table = newTable(m.hours, m.lectures, m.height)
+		m.statusLine = "↑/↓ navigate • enter select • q quit"
+
+	case data.LecturesErrMsg:
+		m.statusLine = "lectures error: " + msg.Err.Error()
 
 	case tea.WindowSizeMsg:
 		m.width = msg.Width
 		m.height = msg.Height
-		m.table = newTable(m.hours, m.height)
+		m.table = newTable(m.hours, m.lectures, m.height)
 
 	case tea.KeyMsg:
 		switch msg.String() {
@@ -70,9 +77,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 func (m model) View() string {
 	header := headerStyle.Render("caly")
-
 	content := contentStyle.Render(m.table.View())
-
 	statusBar := statusBarStyle.Render(m.statusLine)
 
 	return lipgloss.JoinVertical(lipgloss.Left,

@@ -52,10 +52,10 @@ def main():
         help=f"End date (default: {sunday.isoformat()})",
     )
     parser.add_argument("--hours", action="store_true", help="parse hours")
-    parser.add_argument("-c", "--classes", action="store_true", help="parse classes")
+    parser.add_argument("-c", "--lectures", action="store_true", help="parse classes")
 
     args = parser.parse_args()
-    if args.classes:
+    if args.lectures:
         print(f"Fetching lectures from {args.start} to {args.end} ...")
         data = fetch_classes(args.start, args.end)
         lectures = parse_lectures(data["data"])
