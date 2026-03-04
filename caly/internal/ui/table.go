@@ -14,37 +14,60 @@ const reservedLines = 6
 func newTable(hours []data.Hour, lectures []data.Lecture, height int) table.Model {
 	columns := []table.Column{
 		{Title: "Time", Width: 11},
-		{Title: "Mon", Width: 12},
-		{Title: "Tue", Width: 12},
-		{Title: "Wed", Width: 12},
-		{Title: "Thu", Width: 12},
-		{Title: "Fri", Width: 12},
-		{Title: "Sat", Width: 12},
-		{Title: "Sun", Width: 12},
+		{Title: "Mon", Width: 14},
+		{Title: "Tue", Width: 14},
+		{Title: "Wed", Width: 14},
+		{Title: "Thu", Width: 14},
+		{Title: "Fri", Width: 14},
+		{Title: "Sat", Width: 14},
+		{Title: "Sun", Width: 14},
 	}
 
+	// cellKey identifies a single cell by row and column index
 	type cellKey struct{ row, col int }
 	grid := make(map[cellKey]string)
 
 	for _, lec := range lectures {
-		if len(lec.Start) < 16 || len(lec.Date) < 10 {
+		if len(lec.Start) < 16 || len(lec.End) < 16 || len(lec.Date) < 10 {
 			continue
 		}
+
 		t, err := time.Parse("2006-01-02", lec.Date)
 		if err != nil {
 			continue
 		}
+
+		// time.Weekday: Sun=0 Mon=1 ... Sat=6
+		// table cols:   Mon=1 Tue=2 ... Sat=6 Sun=7
 		wd := int(t.Weekday())
 		col := wd
 		if wd == 0 {
 			col = 7
 		}
 
-		lectureStart := lec.Start[11:16]
+		// slice timezone-aware ISO string: "2026-03-05T15:15:00+01:00" -> "15:15"
+		lecStart := lec.Start[11:16]
+		lecEnd := lec.End[11:16]
+
+		first := true
 		for i, h := range hours {
-			if h.Start[:5] == lectureStart {
-				grid[cellKey{i, col}] = lec.SubjectCode
-				break
+			slotStart := h.Start[:5] // "15:15" from "15:15:00"
+			slotEnd := h.End[:5]
+
+			// slot is covered when it falls fully within the lecture window
+			if slotStart >= lecStart && slotEnd <= lecEnd {
+				if _, exists := grid[cellKey{i, col}]; exists {
+					// another lecture already claimed this cell, skip
+					continue
+				}
+				if first {
+					// first slot: show subject code with a start marker
+					grid[cellKey{i, col}] = fmt.Sprintf("▶ %s", lec.SubjectCode)
+					first = false
+				} else {
+					// continuation slot: vertical bar to show the class is still going
+					grid[cellKey{i, col}] = "  │"
+				}
 			}
 		}
 	}
@@ -54,8 +77,8 @@ func newTable(hours []data.Hour, lectures []data.Lecture, height int) table.Mode
 		label := fmt.Sprintf("%s-%s", h.Start[:5], h.End[:5])
 		row := table.Row{label, "", "", "", "", "", "", ""}
 		for col := 1; col <= 7; col++ {
-			if subj, ok := grid[cellKey{i, col}]; ok {
-				row[col] = subj
+			if cell, ok := grid[cellKey{i, col}]; ok {
+				row[col] = cell
 			}
 		}
 		rows[i] = row
