@@ -123,9 +123,7 @@ func renderGrid(g gridData, cursorRow int, weekStart time.Time, width int) strin
 
 	timeColW := 13
 	availableW := width - timeColW - 2
-	if availableW < dayCols*8 {
-		availableW = dayCols * 8
-	}
+	availableW = max(availableW, dayCols*8)
 	cellW := availableW / dayCols
 
 	nowRow := currentTimeRow(g.hours)
@@ -244,17 +242,6 @@ func lectureAtCursor(g gridData, cursorRow int) *data.Lecture {
 		if cell, ok := g.cells[[2]int{hourIdx, col}]; ok {
 			return cell.lecture
 		}
-	}
-	return nil
-}
-
-func lectureAtCursorCol(g gridData, cursorRow, cursorCol int) *data.Lecture {
-	if cursorRow < 0 || cursorRow >= len(g.visibleIdx) {
-		return nil
-	}
-	hourIdx := g.visibleIdx[cursorRow]
-	if cell, ok := g.cells[[2]int{hourIdx, cursorCol}]; ok {
-		return cell.lecture
 	}
 	return nil
 }

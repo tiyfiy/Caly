@@ -168,9 +168,7 @@ func (m model) View() string {
 	title := titleStyle.Render("caly")
 	week := weekStyle.Render(weekLabel)
 	gap := w - lipgloss.Width(title) - lipgloss.Width(week)
-	if gap < 1 {
-		gap = 1
-	}
+	gap = min(gap, 1)
 	header := title + strings.Repeat(" ", gap) + week
 
 	gridStr := ""
