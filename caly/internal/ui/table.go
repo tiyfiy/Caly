@@ -197,7 +197,6 @@ func renderGrid(g gridData, cursorRow int, weekStart time.Time, width int) strin
 
 				var parts []string
 				for si, cell := range subCells {
-					// last sub-cell absorbs leftover width from integer division
 					w := subW
 					if si == n-1 {
 						w = cellW - subW*(n-1)

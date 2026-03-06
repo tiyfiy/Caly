@@ -86,7 +86,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.lectures = msg.Lectures
 		m.rebuildGrid()
 		m.loading = false
-		m.statusLine = "↑/↓ navigate · ←/→ week · q quit"
+		m.statusLine = "↑/↓ navigate · ←/→ week · q quit · p push"
 
 	case data.LecturesErrMsg:
 		m.statusLine = "lectures error: " + msg.Err.Error()
@@ -117,13 +117,19 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.weekStart = currentWeekStart().AddDate(0, 0, m.weekOffset*7)
 			m.loading = true
 			m.statusLine = "loading..."
-			return m, tea.Batch(data.FetchHours(), data.FetchLectures())
+			from := m.weekStart.Format("2006-01-02")
+			to := m.weekStart.AddDate(0, 0, 6).Format("2006-01-02")
+			return m, tea.Batch(data.FetchHours(), data.FetchLecturesWithDate(from, to))
 		case "right", "l":
 			m.weekOffset++
 			m.weekStart = currentWeekStart().AddDate(0, 0, m.weekOffset*7)
 			m.loading = true
 			m.statusLine = "loading..."
-			return m, tea.Batch(data.FetchHours(), data.FetchLectures())
+			from := m.weekStart.Format("2006-01-02")
+			to := m.weekStart.AddDate(0, 0, 6).Format("2006-01-02")
+			return m, tea.Batch(data.FetchHours(), data.FetchLecturesWithDate(from, to))
+		case "p":
+
 		}
 	}
 
