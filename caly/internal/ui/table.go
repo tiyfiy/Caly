@@ -15,13 +15,13 @@ type gridCell struct {
 }
 
 type gridData struct {
-	cells      map[[2]int]gridCell
+	cells      map[[2]int][]gridCell
 	visibleIdx []int
 	hours      []data.Hour
 }
 
 func buildGrid(hours []data.Hour, lectures []data.Lecture) gridData {
-	cells := make(map[[2]int]gridCell)
+	cells := make(map[[2]int][]gridCell)
 	usedRows := make(map[int]bool)
 
 	for i := range lectures {
@@ -51,14 +51,11 @@ func buildGrid(hours []data.Hour, lectures []data.Lecture) gridData {
 
 			if slotStart >= lecStart && slotEnd <= lecEnd {
 				key := [2]int{i, col}
-				if _, exists := cells[key]; exists {
-					continue
-				}
-				cells[key] = gridCell{
+				cells[key] = append(cells[key], gridCell{
 					subjectCode: lec.SubjectCode,
 					isStart:     first,
 					lecture:     lec,
-				}
+				})
 				usedRows[i] = true
 				first = false
 			}
@@ -102,7 +99,6 @@ func renderGrid(g gridData, cursorRow int, weekStart time.Time, width int) strin
 		return lipgloss.NewStyle().Foreground(lipgloss.Color("241")).Render("  No lectures this week")
 	}
 
-	numCols := 6
 	hasSat, hasSun := false, false
 	for key := range g.cells {
 		if key[1] == 6 {
@@ -119,7 +115,6 @@ func renderGrid(g gridData, cursorRow int, weekStart time.Time, width int) strin
 	if hasSun {
 		dayCols = 7
 	}
-	numCols = dayCols + 1
 
 	timeColW := 13
 	availableW := width - timeColW - 2
@@ -155,8 +150,6 @@ func renderGrid(g gridData, cursorRow int, weekStart time.Time, width int) strin
 
 	cursorMarker := lipgloss.NewStyle().
 		Foreground(lipgloss.Color("226"))
-
-	_ = numCols
 
 	dayNames := []string{"Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"}
 	var headerCells []string
@@ -196,29 +189,42 @@ func renderGrid(g gridData, cursorRow int, weekStart time.Time, width int) strin
 
 		for col := 1; col <= dayCols; col++ {
 			key := [2]int{hourIdx, col}
-			cell, hasLecture := g.cells[key]
+			subCells, hasLecture := g.cells[key]
 
 			if hasLecture {
-				bg := ColorForSubject(cell.subjectCode)
-				style := lipgloss.NewStyle().
-					Width(cellW).
-					Align(lipgloss.Center).
-					Background(bg).
-					Foreground(lipgloss.Color("#1a1a1a")).
-					Bold(cell.isStart)
+				n := len(subCells)
+				subW := cellW / n
 
-				if isCursor {
-					style = style.BorderLeft(true).
-						BorderStyle(lipgloss.NormalBorder()).
-						BorderForeground(lipgloss.Color("226")).
-						Width(cellW - 1)
-				}
+				var parts []string
+				for si, cell := range subCells {
+					// last sub-cell absorbs leftover width from integer division
+					w := subW
+					if si == n-1 {
+						w = cellW - subW*(n-1)
+					}
 
-				text := ""
-				if cell.isStart {
-					text = cell.subjectCode
+					bg := ColorForSubject(cell.subjectCode)
+					style := lipgloss.NewStyle().
+						Width(w).
+						Align(lipgloss.Center).
+						Background(bg).
+						Foreground(lipgloss.Color("#1a1a1a")).
+						Bold(cell.isStart)
+
+					if isCursor {
+						style = style.BorderLeft(true).
+							BorderStyle(lipgloss.NormalBorder()).
+							BorderForeground(lipgloss.Color("226")).
+							Width(w - 1)
+					}
+
+					text := ""
+					if cell.isStart {
+						text = cell.subjectCode
+					}
+					parts = append(parts, style.Render(text))
 				}
-				rowCells = append(rowCells, style.Render(text))
+				rowCells = append(rowCells, lipgloss.JoinHorizontal(lipgloss.Top, parts...))
 			} else {
 				style := emptyCellStyle
 				if isCursor {
@@ -239,9 +245,20 @@ func lectureAtCursor(g gridData, cursorRow int) *data.Lecture {
 	}
 	hourIdx := g.visibleIdx[cursorRow]
 	for col := 1; col <= 7; col++ {
-		if cell, ok := g.cells[[2]int{hourIdx, col}]; ok {
-			return cell.lecture
+		if subCells, ok := g.cells[[2]int{hourIdx, col}]; ok && len(subCells) > 0 {
+			return subCells[0].lecture
 		}
+	}
+	return nil
+}
+
+func lectureAtCursorCol(g gridData, cursorRow, cursorCol int) *data.Lecture {
+	if cursorRow < 0 || cursorRow >= len(g.visibleIdx) {
+		return nil
+	}
+	hourIdx := g.visibleIdx[cursorRow]
+	if subCells, ok := g.cells[[2]int{hourIdx, cursorCol}]; ok && len(subCells) > 0 {
+		return subCells[0].lecture
 	}
 	return nil
 }
