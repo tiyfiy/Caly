@@ -5,6 +5,8 @@ import (
 	"strings"
 	"time"
 
+	"os"
+
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 	"github.com/tiyfiy/caly/internal/data"
@@ -96,6 +98,12 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.width = msg.Width
 		m.height = msg.Height
 
+	case data.CalendarPushedMsg:
+		m.statusLine = fmt.Sprintf("✓ pushed %d events to Calendar", msg.Count)
+
+	case data.CalendarErrMsg:
+		m.statusLine = "calendar error: " + msg.Err.Error()
+
 	case tea.KeyMsg:
 		switch msg.String() {
 		case "ctrl+c", "q":
@@ -129,7 +137,13 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			to := m.weekStart.AddDate(0, 0, 6).Format("2006-01-02")
 			return m, tea.Batch(data.FetchHours(), data.FetchLecturesWithDate(from, to))
 		case "p":
-
+			cfg := data.CalDAVConfig{
+				Username:     os.Getenv("ICLOUD_USERNAME"),
+				AppPassword:  os.Getenv("ICLOUD_APP_PASSWORD"),
+				CalendarPath: os.Getenv("ICLOUD_CALENDAR_PATH"),
+				CalDAVHost:   os.Getenv("ICLOUD_CALDAV_HOST"),
+			}
+			return m, data.PushToCalendar(m.lectures, cfg)
 		}
 	}
 

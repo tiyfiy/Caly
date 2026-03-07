@@ -1,5 +1,4 @@
 import argparse
-import json
 from datetime import date, timedelta
 
 from scraper.save import save_hours_to_file, save_lectures_to_file
