@@ -5,9 +5,9 @@
     "lecturers": [
       "Simon Schwaiger"
     ],
-    "date": "2026-03-26",
-    "start": "2026-03-26T11:20:00+01:00",
-    "end": "2026-03-26T13:35:00+01:00",
+    "date": "2026-03-19",
+    "start": "2026-03-19T11:20:00+01:00",
+    "end": "2026-03-19T13:35:00+01:00",
     "room": "EDV_F1.03"
   },
   {
@@ -16,9 +16,9 @@
     "lecturers": [
       "Lukas Rohatsch"
     ],
-    "date": "2026-03-26",
-    "start": "2026-03-26T15:15:00+01:00",
-    "end": "2026-03-26T17:40:00+01:00",
+    "date": "2026-03-19",
+    "start": "2026-03-19T15:15:00+01:00",
+    "end": "2026-03-19T17:40:00+01:00",
     "room": "SEM_F4.04"
   },
   {
@@ -27,20 +27,20 @@
     "lecturers": [
       "Alfred Dolecek"
     ],
-    "date": "2026-03-26",
-    "start": "2026-03-26T16:55:00+01:00",
-    "end": "2026-03-26T19:20:00+01:00",
+    "date": "2026-03-19",
+    "start": "2026-03-19T16:55:00+01:00",
+    "end": "2026-03-19T19:20:00+01:00",
     "room": "UEB_B2.01"
   },
   {
-    "subject_code": "APPCS",
-    "subject_name": "Applied Computer Science",
+    "subject_code": "DSML",
+    "subject_name": "Data Science und Machine Learning",
     "lecturers": [
-      "Florian Wörister"
+      "Patrick Link"
     ],
-    "date": "2026-03-27",
-    "start": "2026-03-27T17:50:00+01:00",
-    "end": "2026-03-27T19:20:00+01:00",
-    "room": "EDV_A2.06"
+    "date": "2026-03-20",
+    "start": "2026-03-20T14:30:00+01:00",
+    "end": "2026-03-20T17:40:00+01:00",
+    "room": "EDV_F4.26"
   }
 ]

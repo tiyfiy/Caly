@@ -151,6 +151,9 @@ func renderGrid(g gridData, cursorRow int, weekStart time.Time, width int) strin
 	cursorMarker := lipgloss.NewStyle().
 		Foreground(lipgloss.Color("226"))
 
+	cursorRowBg := lipgloss.Color("235")
+	_ = cursorRowBg
+
 	dayNames := []string{"Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"}
 	var headerCells []string
 	headerCells = append(headerCells, timeHeaderStyle.Render(""))
@@ -211,10 +214,10 @@ func renderGrid(g gridData, cursorRow int, weekStart time.Time, width int) strin
 						Bold(cell.isStart)
 
 					if isCursor {
-						style = style.BorderLeft(true).
-							BorderStyle(lipgloss.NormalBorder()).
-							BorderForeground(lipgloss.Color("226")).
-							Width(w - 1)
+						style = style.
+							Background(lipgloss.Color("#ffffff")).
+							Foreground(lipgloss.Color("#1a1a1a")).
+							Bold(true)
 					}
 
 					text := ""
