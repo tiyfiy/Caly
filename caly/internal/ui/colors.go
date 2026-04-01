@@ -3,14 +3,14 @@ package ui
 import "github.com/charmbracelet/lipgloss"
 
 var subjectPalette = []lipgloss.Color{
-	lipgloss.Color("#87CEEB"), // sky blue
-	lipgloss.Color("#98FB98"), // pale green
-	lipgloss.Color("#DDA0DD"), // plum
-	lipgloss.Color("#F0E68C"), // khaki
-	lipgloss.Color("#FFA07A"), // light salmon
-	lipgloss.Color("#B0C4DE"), // light steel blue
-	lipgloss.Color("#FFB6C1"), // light pink
-	lipgloss.Color("#20B2AA"), // light sea green
+	lipgloss.Color("#93C5FD"), // blue-300
+	lipgloss.Color("#86EFAC"), // green-300
+	lipgloss.Color("#FDE68A"), // amber-200
+	lipgloss.Color("#FCA5A5"), // red-300
+	lipgloss.Color("#C4B5FD"), // violet-300
+	lipgloss.Color("#5EEAD4"), // teal-300
+	lipgloss.Color("#F9A8D4"), // pink-300
+	lipgloss.Color("#FED7AA"), // orange-200
 }
 
 var subjectColorMap = map[string]lipgloss.Color{}

@@ -15,23 +15,33 @@ import (
 var (
 	titleStyle = lipgloss.NewStyle().
 			Bold(true).
-			Foreground(lipgloss.Color("62")).
+			Foreground(lipgloss.Color("#818CF8")).
 			Padding(0, 1)
 
 	weekStyle = lipgloss.NewStyle().
-			Foreground(lipgloss.Color("245")).
+			Foreground(lipgloss.Color("#9CA3AF")).
 			Padding(0, 1)
 
+	dividerStyle = lipgloss.NewStyle().
+			Foreground(lipgloss.Color("#374151"))
+
 	detailStyle = lipgloss.NewStyle().
-			Foreground(lipgloss.Color("252")).
 			Padding(0, 2)
 
-	detailLabelStyle = lipgloss.NewStyle().
+	detailBadgeStyle = lipgloss.NewStyle().
 				Bold(true).
-				Foreground(lipgloss.Color("255"))
+				Foreground(lipgloss.Color("#111827")).
+				Padding(0, 1)
+
+	detailNameStyle = lipgloss.NewStyle().
+			Bold(true).
+			Foreground(lipgloss.Color("#F9FAFB"))
+
+	detailMetaStyle = lipgloss.NewStyle().
+			Foreground(lipgloss.Color("#6B7280"))
 
 	statusBarStyle = lipgloss.NewStyle().
-			Foreground(lipgloss.Color("241")).
+			Foreground(lipgloss.Color("#4B5563")).
 			Padding(0, 1)
 )
 
@@ -78,7 +88,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.hours = msg.Hours
 		m.rebuildGrid()
 		m.loading = false
-		m.statusLine = "↑/↓ navigate · ←/→ week · q quit"
+		m.statusLine = "↑↓ navigate   ←→ week   q quit"
 
 	case data.HoursErrMsg:
 		m.statusLine = "hours error: " + msg.Err.Error()
@@ -88,7 +98,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.lectures = msg.Lectures
 		m.rebuildGrid()
 		m.loading = false
-		m.statusLine = "↑/↓ navigate · ←/→ week · q quit · p push"
+		m.statusLine = "↑↓ navigate   ←→ week   p push   q quit"
 
 	case data.LecturesErrMsg:
 		m.statusLine = "lectures error: " + msg.Err.Error()
@@ -180,57 +190,63 @@ func (m model) View() string {
 		w = 80
 	}
 
-	weekEnd := m.weekStart.AddDate(0, 0, 6)
-	weekLabel := fmt.Sprintf("Week: %s - %s",
-		m.weekStart.Format("Jan 02"),
-		weekEnd.Format("Jan 02, 2006"))
+	// ── Header ────────────────────────────────────────────────────────────────
 
 	title := titleStyle.Render("caly")
+
+	weekEnd := m.weekStart.AddDate(0, 0, 6)
+	weekLabel := fmt.Sprintf("%s – %s",
+		m.weekStart.Format("Jan 02"),
+		weekEnd.Format("Jan 02, 2006"))
 	week := weekStyle.Render(weekLabel)
+
 	gap := w - lipgloss.Width(title) - lipgloss.Width(week)
-	gap = min(gap, 1)
+	gap = max(1, gap)
+
 	header := title + strings.Repeat(" ", gap) + week
 
-	gridStr := ""
+	divider := dividerStyle.Render(strings.Repeat("─", w))
+
+	// ── Grid ──────────────────────────────────────────────────────────────────
+
+	gridW := w - 2
+	gridW = max(20, gridW)
+
+	var gridStr string
 	if m.loading {
 		gridStr = lipgloss.NewStyle().
-			Foreground(lipgloss.Color("241")).
-			Padding(1, 2).
-			Render("  Loading...")
+			Foreground(lipgloss.Color("#6B7280")).
+			Padding(2, 2).
+			Render("loading...")
 	} else {
-		gridStr = lipgloss.NewStyle().Padding(1, 1).Render(
-			renderGrid(m.grid, m.cursorRow, m.weekStart, w),
-		)
+		gridStr = lipgloss.NewStyle().
+			Padding(1, 1).
+			Render(renderGrid(m.grid, m.cursorRow, m.weekStart, gridW))
 	}
+
+	// ── Detail ────────────────────────────────────────────────────────────────
 
 	detail := ""
 	if !m.loading {
 		lec := lectureAtCursor(m.grid, m.cursorRow)
 		if lec != nil {
 			color := ColorForSubject(lec.SubjectCode)
-			colorBlock := lipgloss.NewStyle().
-				Background(color).
-				Foreground(lipgloss.Color("#1a1a1a")).
-				Bold(true).
-				Padding(0, 1).
-				Render(lec.SubjectCode)
-
-			room := lec.Room
-			lecturers := strings.Join(lec.Lecturers, ", ")
-
-			detail = detailStyle.Render(
-				colorBlock + "  " +
-					detailLabelStyle.Render(lec.SubjectName) +
-					"  ·  " + room +
-					"  ·  " + lecturers,
+			badge := detailBadgeStyle.Background(color).Render(lec.SubjectCode)
+			name := detailNameStyle.Render(lec.SubjectName)
+			meta := detailMetaStyle.Render(
+				"   ·  " + lec.Room + "   ·  " + strings.Join(lec.Lecturers, ", "),
 			)
+			detail = detailStyle.Render(badge + "  " + name + meta)
 		}
 	}
+
+	// ── Status bar ────────────────────────────────────────────────────────────
 
 	status := statusBarStyle.Render(m.statusLine)
 
 	return lipgloss.JoinVertical(lipgloss.Left,
 		header,
+		divider,
 		gridStr,
 		detail,
 		status,

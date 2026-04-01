@@ -2,6 +2,7 @@ package ui
 
 import (
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/charmbracelet/lipgloss"
@@ -96,7 +97,10 @@ func currentTimeRow(hours []data.Hour) int {
 
 func renderGrid(g gridData, cursorRow int, weekStart time.Time, width int) string {
 	if len(g.visibleIdx) == 0 {
-		return lipgloss.NewStyle().Foreground(lipgloss.Color("241")).Render("  No lectures this week")
+		return lipgloss.NewStyle().
+			Foreground(lipgloss.Color("#4B5563")).
+			Padding(1, 0).
+			Render("No lectures scheduled this week")
 	}
 
 	hasSat, hasSun := false, false
@@ -116,126 +120,185 @@ func renderGrid(g gridData, cursorRow int, weekStart time.Time, width int) strin
 		dayCols = 7
 	}
 
-	timeColW := 13
-	availableW := width - timeColW - 2
-	availableW = max(availableW, dayCols*8)
-	cellW := availableW / dayCols
+	const prefixW = 2
+	const timeColW = 7
+	const sepW = 1
+
+	available := width - prefixW - timeColW - dayCols*sepW
+	available = max(dayCols*10, available)
+
+	cellW := available / dayCols
+
+	// Detect today's column (1-indexed, Mon=1)
+	now := time.Now()
+	todayCol := -1
+	for d := 0; d < dayCols; d++ {
+		day := weekStart.AddDate(0, 0, d)
+		if day.Year() == now.Year() && day.YearDay() == now.YearDay() {
+			todayCol = d + 1
+			break
+		}
+	}
 
 	nowRow := currentTimeRow(g.hours)
 
-	headerStyle := lipgloss.NewStyle().
-		Bold(true).
-		Foreground(lipgloss.Color("255")).
-		Background(lipgloss.Color("236")).
-		Width(cellW).
-		Align(lipgloss.Center).
-		Padding(0, 1)
+	// ── Styles ────────────────────────────────────────────────────────────────
 
-	timeHeaderStyle := lipgloss.NewStyle().
+	headerBg := lipgloss.Color("#0F172A")    // slate-900
+	todayBg := lipgloss.Color("#1E1B4B")     // indigo-950
+	todayFg := lipgloss.Color("#A5B4FC")     // indigo-300
+	headerFg := lipgloss.Color("#D1D5DB")    // gray-300
+	mutedFg := lipgloss.Color("#6B7280")     // gray-500
+	currentFg := lipgloss.Color("#F59E0B")   // amber-400
+	accentFg := lipgloss.Color("#818CF8")    // indigo-400
+	brightFg := lipgloss.Color("#F9FAFB")    // gray-50
+	separatorFg := lipgloss.Color("#1F2937") // gray-800
+	cursorRowBg := lipgloss.Color("#1E293B") // slate-800
+	lecCursorBg := lipgloss.Color("#E0E7FF") // indigo-100
+	lecCursorFg := lipgloss.Color("#1E1B4B") // indigo-950
+	textDark := lipgloss.Color("#111827")    // gray-900
+
+	dayHeaderStyle := lipgloss.NewStyle().
 		Bold(true).
-		Foreground(lipgloss.Color("255")).
-		Background(lipgloss.Color("236")).
-		Width(timeColW).
+		Foreground(headerFg).
+		Background(headerBg).
+		Width(cellW).
 		Align(lipgloss.Center)
 
+	todayHeaderStyle := lipgloss.NewStyle().
+		Bold(true).
+		Foreground(todayFg).
+		Background(todayBg).
+		Width(cellW).
+		Align(lipgloss.Center)
+
+	timeHeaderBg := lipgloss.NewStyle().
+		Background(headerBg).
+		Width(prefixW + timeColW)
+
 	timeCellStyle := lipgloss.NewStyle().
-		Foreground(lipgloss.Color("245")).
+		Foreground(mutedFg).
 		Width(timeColW).
 		Align(lipgloss.Right).
 		Padding(0, 1)
 
-	emptyCellStyle := lipgloss.NewStyle().
-		Width(cellW).
-		Align(lipgloss.Center)
+	sep := lipgloss.NewStyle().
+		Foreground(separatorFg).
+		Render("│")
 
-	cursorMarker := lipgloss.NewStyle().
-		Foreground(lipgloss.Color("226"))
+	headerSep := lipgloss.NewStyle().
+		Background(headerBg).
+		Foreground(separatorFg).
+		Render("│")
 
-	cursorRowBg := lipgloss.Color("235")
-	_ = cursorRowBg
+	// ── Header row ────────────────────────────────────────────────────────────
 
 	dayNames := []string{"Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"}
-	var headerCells []string
-	headerCells = append(headerCells, timeHeaderStyle.Render(""))
+	var headerParts []string
+	headerParts = append(headerParts, timeHeaderBg.Render(""))
+
 	for d := 0; d < dayCols; d++ {
 		day := weekStart.AddDate(0, 0, d)
 		label := fmt.Sprintf("%s %02d", dayNames[d], day.Day())
-		headerCells = append(headerCells, headerStyle.Render(label))
+		col := d + 1
+
+		if col == todayCol {
+			headerParts = append(headerParts, headerSep+todayHeaderStyle.Render(label))
+		} else {
+			headerParts = append(headerParts, headerSep+dayHeaderStyle.Render(label))
+		}
 	}
-	header := lipgloss.JoinHorizontal(lipgloss.Top, headerCells...)
+
+	header := strings.Join(headerParts, "")
+
+	sepLine := lipgloss.NewStyle().
+		Foreground(separatorFg).
+		Render(strings.Repeat("─", width))
+
+	// ── Time rows ─────────────────────────────────────────────────────────────
 
 	var rows []string
 	rows = append(rows, header)
+	rows = append(rows, sepLine)
 
 	for vi, hourIdx := range g.visibleIdx {
 		h := g.hours[hourIdx]
-		timeLabel := fmt.Sprintf("%s-%s", h.Start[:5], h.End[:5])
+		timeLabel := h.Start[:5]
 
 		isCurrentTime := hourIdx == nowRow
 		isCursor := vi == cursorRow
 
 		tStyle := timeCellStyle
-		if isCurrentTime {
-			tStyle = tStyle.Foreground(lipgloss.Color("226"))
-		}
-
 		prefix := "  "
-		if isCursor {
-			prefix = cursorMarker.Render("→ ")
-			tStyle = tStyle.Bold(true).Foreground(lipgloss.Color("255"))
-		} else if isCurrentTime {
-			prefix = cursorMarker.Render("• ")
+
+		switch {
+		case isCursor:
+			prefix = lipgloss.NewStyle().Foreground(accentFg).Bold(true).Render("▶ ")
+			tStyle = tStyle.Bold(true).Foreground(brightFg)
+		case isCurrentTime:
+			prefix = lipgloss.NewStyle().Foreground(currentFg).Render("◆ ")
+			tStyle = tStyle.Foreground(currentFg)
 		}
 
-		var rowCells []string
-		rowCells = append(rowCells, prefix+tStyle.Render(timeLabel))
+		var rowParts []string
+		rowParts = append(rowParts, prefix+tStyle.Render(timeLabel))
 
 		for col := 1; col <= dayCols; col++ {
 			key := [2]int{hourIdx, col}
 			subCells, hasLecture := g.cells[key]
 
+			// Last column gets the remainder width to fill exactly
+			colW := cellW
+			if col == dayCols {
+				colW = available - cellW*(dayCols-1)
+			}
+
+			var cell string
 			if hasLecture {
 				n := len(subCells)
-				subW := cellW / n
+				subW := colW / n
 
 				var parts []string
-				for si, cell := range subCells {
+				for si, sc := range subCells {
 					w := subW
 					if si == n-1 {
-						w = cellW - subW*(n-1)
+						w = colW - subW*(n-1)
 					}
 
-					bg := ColorForSubject(cell.subjectCode)
-					style := lipgloss.NewStyle().
+					bg := ColorForSubject(sc.subjectCode)
+					cellStyle := lipgloss.NewStyle().
 						Width(w).
 						Align(lipgloss.Center).
 						Background(bg).
-						Foreground(lipgloss.Color("#1a1a1a")).
-						Bold(cell.isStart)
+						Foreground(textDark).
+						Bold(sc.isStart)
 
 					if isCursor {
-						style = style.
-							Background(lipgloss.Color("#ffffff")).
-							Foreground(lipgloss.Color("#1a1a1a")).
+						cellStyle = cellStyle.
+							Background(lecCursorBg).
+							Foreground(lecCursorFg).
 							Bold(true)
 					}
 
 					text := ""
-					if cell.isStart {
-						text = cell.subjectCode
+					if sc.isStart {
+						text = sc.subjectCode
 					}
-					parts = append(parts, style.Render(text))
+					parts = append(parts, cellStyle.Render(text))
 				}
-				rowCells = append(rowCells, lipgloss.JoinHorizontal(lipgloss.Top, parts...))
+				cell = lipgloss.JoinHorizontal(lipgloss.Top, parts...)
 			} else {
-				style := emptyCellStyle
+				cs := lipgloss.NewStyle().Width(colW)
 				if isCursor {
-					style = style.Foreground(lipgloss.Color("238"))
+					cs = cs.Background(cursorRowBg)
 				}
-				rowCells = append(rowCells, style.Render("·"))
+				cell = cs.Render("")
 			}
+
+			rowParts = append(rowParts, sep+cell)
 		}
-		rows = append(rows, lipgloss.JoinHorizontal(lipgloss.Top, rowCells...))
+
+		rows = append(rows, strings.Join(rowParts, ""))
 	}
 
 	return lipgloss.JoinVertical(lipgloss.Left, rows...)
