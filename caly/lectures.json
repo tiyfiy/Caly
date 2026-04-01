@@ -1,24 +1,13 @@
 [
   {
-    "subject_code": "SOAR",
-    "subject_name": "Service and object-oriented Algorithms in Robotics",
-    "lecturers": [
-      "Simon Schwaiger"
-    ],
-    "date": "2026-03-19",
-    "start": "2026-03-19T11:20:00+01:00",
-    "end": "2026-03-19T13:35:00+01:00",
-    "room": "EDV_F1.03"
-  },
-  {
     "subject_code": "ODA",
     "subject_name": "Data Ethics and Open Data",
     "lecturers": [
       "Lukas Rohatsch"
     ],
-    "date": "2026-03-19",
-    "start": "2026-03-19T15:15:00+01:00",
-    "end": "2026-03-19T17:40:00+01:00",
+    "date": "2026-04-23",
+    "start": "2026-04-23T15:15:00+02:00",
+    "end": "2026-04-23T17:40:00+02:00",
     "room": "SEM_F4.04"
   },
   {
@@ -27,9 +16,9 @@
     "lecturers": [
       "Alfred Dolecek"
     ],
-    "date": "2026-03-19",
-    "start": "2026-03-19T16:55:00+01:00",
-    "end": "2026-03-19T19:20:00+01:00",
+    "date": "2026-04-23",
+    "start": "2026-04-23T16:55:00+02:00",
+    "end": "2026-04-23T19:20:00+02:00",
     "room": "UEB_B2.01"
   },
   {
@@ -38,9 +27,9 @@
     "lecturers": [
       "Patrick Link"
     ],
-    "date": "2026-03-20",
-    "start": "2026-03-20T14:30:00+01:00",
-    "end": "2026-03-20T17:40:00+01:00",
+    "date": "2026-04-24",
+    "start": "2026-04-24T09:40:00+02:00",
+    "end": "2026-04-24T12:50:00+02:00",
     "room": "EDV_F4.26"
   }
 ]

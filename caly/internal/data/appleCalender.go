@@ -126,7 +126,12 @@ func pushEventCalDAV(lec Lecture, cfg CalDAVConfig) error {
 	if host == "" {
 		host = iCloudCalDAVBase
 	}
-	url := host + cfg.CalendarPath + uid + ".ics"
+	calPath := cfg.CalendarPath
+	if calPath != "" && !strings.HasSuffix(calPath, "/") {
+		calPath += "/"
+	}
+	safeUID := strings.ReplaceAll(uid, "@", "%40")
+	url := host + calPath + safeUID + ".ics"
 
 	req, err := http.NewRequest(http.MethodPut, url, strings.NewReader(ics))
 	if err != nil {
